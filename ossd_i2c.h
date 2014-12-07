@@ -55,9 +55,10 @@ extern "C" {
 	#include <stdint.h>
 #endif
 
-#define OSSD_FONT_8x8  0
-#define OSSD_FONT_8x16 1
-#define OSSD_FONT_USER 2
+#define OSSD_FONT_6x8  0
+#define OSSD_FONT_8x8  1
+#define OSSD_FONT_8x16 2
+#define OSSD_FONT_USER 3
 #define OSSD_FONT_MAX  OSSD_FONT_USER
 
 typedef struct ossd_font_s

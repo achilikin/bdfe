@@ -103,6 +103,10 @@
 #define OSSD_CHARGE_PUMP_ON  0x14
 #define OSSD_CHARGE_PUMP_OFF 0x10
 
+static const uint8_t font68[] PROGMEM = {
+#include "font6x8.h"
+};
+
 static const uint8_t font88[] PROGMEM = {
 #include "font88.h"
 };
@@ -112,6 +116,7 @@ static const uint8_t font816[] PROGMEM = {
 };
 
 static ossd_font_t _ofont[OSSD_FONT_MAX+1] = {
+	{  6,  8, 32, 127-32, font68 },	
 	{  8,  8, 32, 127-32, font88 },
 	{  8, 16, 32, 127-32, font816 },
 	{  0,  0, 0,       0, NULL }
@@ -343,16 +348,17 @@ void ossd_putlx(uint8_t line, int8_t x, const char *str, uint8_t atr)
 	uint8_t gw = _ofont[_cfont].gw;
 	uint8_t gh = _ofont[_cfont].gh;
 	uint8_t go = _ofont[_cfont].go;
+	uint8_t gb = gw*(gh / 8); // bytes per glyph
 	const uint8_t *font = _ofont[_cfont].font;
 	uint8_t cmode = ossd_set_addr_mode(OSSD_ADDR_MODE_HOR);
 	for(; *str != '\0'; str++, x += gw) {
-		uint16_t idx = (*str - go) * gh;
+		uint16_t idx = (*str - go) * gb;
 		if ((uint8_t)x > (128 - gw)) {
 			x = 0;
 			line = (line + (gh+7)/8) & 0x07;
 		}
 		ossd_goto(line, x);    
-		for(uint8_t i = 0; i < gh; i++) {
+		for(uint8_t i = 0; i < gb; i++) {
 			uint8_t d = pgm_read_byte(&font[idx+i]);
 			d ^= rev;
 			if (under && (gh == 8 || i > (gw - 1)))
