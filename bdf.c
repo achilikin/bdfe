@@ -256,10 +256,14 @@ bdfe_t *bdf_convert(const char *name, unsigned gmin, unsigned gmax, unsigned asc
 						memcpy(gout, gin, dy);
 
 					if (!mute) {
+						// glyph per line
 						if (flags & BDF_GPL) {
 							printf("\t");
-							for(i = 0; i < dy; i++)
+							for(i = 0; i < gh; i++) {
+								if ((i == gh/2) && (flags & BDF_ROTATE))
+									printf("\n\t");
 								printf("0x%02X,", gout[i]);
+							}
 							printf(" // %5d", idx);
 							if (isprint(idx))
 								printf(" '%c'", idx);
