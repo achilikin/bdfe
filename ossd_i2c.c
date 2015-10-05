@@ -1,5 +1,5 @@
 /*  BSD License
-    Copyright (c) 2014 Andrey Chilikin https://github.com/achilikin
+    Copyright (c) 2015 Andrey Chilikin https://github.com/achilikin
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions are met:
@@ -34,7 +34,7 @@
 
 #include "ossd_i2c.h"
 
-#if (OSSD_TARGET == OSSD_AVR) 
+#if (OSSD_TARGET == OSSD_IF_AVR) 
 	#include <avr/io.h>
 	#include <avr/pgmspace.h>
 	#include <util/atomic.h>
@@ -44,8 +44,10 @@
 	#define pgm_read_byte(x) (*((uint8_t *)x))
 	#include <alloca.h>
 	#include <memory.h>
-#if (OSSD_TARGET == OSSD_RPI)
-	#include "pi2c.h"
+	#if (OSSD_TARGET == OSSD_IF_WIRE)
+		#include "wi2c.h"
+	#else
+	#include "li2c.h"
 #endif
 #endif
 
@@ -124,6 +126,7 @@ static ossd_font_t _ofont[OSSD_FONT_MAX+1] = {
 
 static uint8_t _cfont;
 static uint8_t _mode;
+static uint8_t _i2c_val;
 
 uint8_t ossd_select_font(uint8_t font)
 {
@@ -149,45 +152,7 @@ void ossd_set_user_font(ossd_font_t *nfont, ossd_font_t *ofont)
 	_ofont[OSSD_FONT_USER].font = nfont->font;
 }
 
-#if (OSSD_TARGET == OSSD_AVR)
-
-static void ossd_send_byte(uint8_t dc, uint8_t data)
-{
-	i2c_start(I2C_OSSD | I2C_WRITE);
-	i2c_write(dc);
-	i2c_write(data);
-	i2c_stop();
-}
-
-static void ossd_cmd_arg(uint8_t cmd, uint8_t arg)
-{
-	i2c_start(I2C_OSSD | I2C_WRITE);
-	i2c_write(OSSD_CMD);
-	i2c_write(cmd);
-	i2c_write(arg);
-	i2c_stop();
-}
-
-static void ossd_cmd_arg2(uint8_t cmd, uint8_t arg1, uint8_t arg2)
-{
-	i2c_start(I2C_OSSD | I2C_WRITE);
-	i2c_write(OSSD_CMD);
-	i2c_write(cmd);
-	i2c_write(arg1);
-	i2c_write(arg2);
-	i2c_stop();
-}
-
-static void ossd_fill_line(uint8_t data, uint8_t num)
-{
-	i2c_start(I2C_OSSD | I2C_WRITE);
-	i2c_write(OSSD_DATA);
-	for(uint8_t i = 0; i < num; i++)
-		i2c_write(data);
-	i2c_stop();
-}
-
-#else
+#if (OSSD_TARGET == OSSD_IF_LINUX)
 
 static void ossd_send_byte(uint8_t dc, uint8_t data)
 {
@@ -195,7 +160,7 @@ static void ossd_send_byte(uint8_t dc, uint8_t data)
 	buf[0] = dc;
 	buf[1] = data;
 
-	pi2c_write(PI2C_BUS, buf, 2);
+	li2c_write(_i2c_val, buf, 2);
 }
 
 static void ossd_cmd_arg(uint8_t cmd, uint8_t arg)
@@ -204,7 +169,7 @@ static void ossd_cmd_arg(uint8_t cmd, uint8_t arg)
 	data[0] = OSSD_CMD;
 	data[1] = cmd;
 	data[2] = arg;
-	pi2c_write(PI2C_BUS, data, 3);
+	li2c_write(_i2c_val, data, 3);
 }
 
 static void ossd_cmd_arg2(uint8_t cmd, uint8_t arg1, uint8_t arg2)
@@ -214,7 +179,7 @@ static void ossd_cmd_arg2(uint8_t cmd, uint8_t arg1, uint8_t arg2)
 	data[1] = cmd;
 	data[2] = arg1;
 	data[3] = arg2;
-	pi2c_write(PI2C_BUS, data, 4);
+	li2c_write(_i2c_val, data, 4);
 }
 
 static void ossd_fill_line(uint8_t data, uint8_t num)
@@ -222,8 +187,61 @@ static void ossd_fill_line(uint8_t data, uint8_t num)
 	uint8_t *buf = (uint8_t *)alloca(num+1);
 	memset(buf, data, num+1);
 	buf[0] = OSSD_DATA;
-	pi2c_write(PI2C_BUS, buf, num+1);
+	li2c_write(_i2c_val, buf, num+1);
 }
+
+#else
+
+static void ossd_send_byte(uint8_t dc, uint8_t data)
+{
+	i2c_start(_i2c_val);
+	i2c_write(dc);
+	i2c_write(data);
+	i2c_stop();
+}
+
+static void ossd_cmd_arg(uint8_t cmd, uint8_t arg)
+{
+	i2c_start(_i2c_val);
+	i2c_write(OSSD_CMD);
+	i2c_write(cmd);
+	i2c_write(arg);
+	i2c_stop();
+}
+
+static void ossd_cmd_arg2(uint8_t cmd, uint8_t arg1, uint8_t arg2)
+{
+	i2c_start(_i2c_val);
+	i2c_write(OSSD_CMD);
+	i2c_write(cmd);
+	i2c_write(arg1);
+	i2c_write(arg2);
+	i2c_stop();
+}
+
+#if (OSSD_TARGET == OSSD_IF_AVR)
+
+static void ossd_fill_line(uint8_t data, uint8_t num)
+{
+	uint8_t i;
+	i2c_start(_i2c_val);
+	i2c_write(OSSD_DATA);
+	for(i = 0; i < num; i++)
+		i2c_write(data);
+	i2c_stop();
+}
+
+#else
+
+static inline void ossd_data(uint8_t cmd);
+
+static void ossd_fill_line(uint8_t data, uint8_t num)
+{
+	uint8_t i;
+	for(i = 0; i < num; i++)
+		ossd_data(data);
+}
+#endif
 
 #endif
 
@@ -271,7 +289,8 @@ void ossd_goto(uint8_t line, uint8_t x)
 void ossd_fill_screen(uint8_t data)
 {
 	// fill full screen line by line
-	for(uint8_t line = 0; line < 8; line++) {
+	uint8_t line;
+	for(line = 0; line < 8; line++) {
 		ossd_goto(line, 0);
 		ossd_fill_line(data, 128);
 	}
@@ -305,7 +324,8 @@ static void ossd_put_centre(uint8_t line, const char *str, uint8_t atr)
 	// in case if new text is shorter than previous one
 	// we clean line up to x position
 	if (x) {
-		for(uint8_t i = 0; i < (gh+7)/8; i++) {
+		uint8_t i;
+		for(i = 0; i < (gh+7)/8; i++) {
 			ossd_goto(line + i, 0);
 			ossd_fill_line(0, x);
 		}
@@ -317,7 +337,8 @@ static void ossd_put_centre(uint8_t line, const char *str, uint8_t atr)
 	// in case if new text is shorter than previous one
 	// we clean to the end of the line
 	if (x) {
-		for(uint8_t i = 0; i < (gh+7)/8; i++) {
+		uint8_t i;
+		for(i = 0; i < (gh+7)/8; i++) {
 			ossd_goto(line + i, x + len);
 			ossd_fill_line(0, x);
 		}
@@ -358,7 +379,8 @@ void ossd_putlx(uint8_t line, int8_t x, const char *str, uint8_t atr)
 			line = (line + (gh+7)/8) & 0x07;
 		}
 		ossd_goto(line, x);    
-		for(uint8_t i = 0; i < gb; i++) {
+		uint8_t i;
+		for(i = 0; i < gb; i++) {
 			uint8_t d = pgm_read_byte(&font[idx+i]);
 			d ^= rev;
 			if (under && (gh == 8 || i > (gw - 1)))
@@ -371,9 +393,13 @@ void ossd_putlx(uint8_t line, int8_t x, const char *str, uint8_t atr)
 	ossd_set_addr_mode(cmode);
 }
 
-void ossd_init(uint8_t orientation)
+void ossd_init(uint8_t i2c_val, uint8_t orientation)
 {
 	_mode = 0xFF;
+	_i2c_val = i2c_val;
+#if (OSSD_TARGET == OSSD_IF_AVR) 
+	_i2c_val = (_i2c_val << 1) | I2C_WRITE;
+#endif
 	// set all default values
 	ossd_cmd(OSSD_SET_SLEEP_ON);
 	ossd_cmd_arg(OSSD_SET_MUX_RATIO, 63);	
@@ -390,7 +416,7 @@ void ossd_init(uint8_t orientation)
 	ossd_cmd(OSSD_SET_INVERSE_OFF);
 	ossd_cmd_arg(OSSD_SET_CHARGE_PUMP, OSSD_CHARGE_PUMP_ON);
 	ossd_set_addr_mode(OSSD_ADDR_MODE_PAGE);
-	ossd_fill_screen(0);
+	ossd_fill_screen(0x00);
 	ossd_cmd(OSSD_SET_SLEEP_OFF);
 	ossd_goto(0, 0);
 }

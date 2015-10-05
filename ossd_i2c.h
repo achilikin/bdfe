@@ -1,5 +1,5 @@
 /*  BSD License
-    Copyright (c) 2014 Andrey Chilikin https://github.com/achilikin
+    Copyright (c) 2015 Andrey Chilikin https://github.com/achilikin
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions are met:
@@ -38,20 +38,20 @@ extern "C" {
 #endif
 #endif
 
-/** Target platform */
-#define OSSD_AVR	 1 /*< AVR compiler */
-#define OSSD_RPI	 2 /*< Raspberry Pi */
-#define OSSD_GALILEO 3 /*< Reserved for Intel Galileo */
+/** Target interface */
+#define OSSD_IF_AVR	  1 /*< AVR compiler */
+#define OSSD_IF_LINUX 2 /*< Linux native Intel Edison or Raspberry Pi */
+#define OSSD_IF_WIRE  3 /*< Arduino Wire Interface on Intel Edison */
 
+#ifndef OSSD_TARGET
 #ifdef __AVR_ARCH__
-	#define OSSD_TARGET OSSD_AVR
+	#define OSSD_TARGET OSSD_IF_AVR
 #else
-	#define OSSD_TARGET OSSD_RPI
+	#define OSSD_TARGET OSSD_IF_LINUX
+#endif
 #endif
 
-#if (OSSD_TARGET == OSSD_AVR)
-	#define I2C_OSSD (0x3C << 1)
-#else
+#if (OSSD_TARGET != OSSD_IF_AVR)
 	#include <stdint.h>
 #endif
 
@@ -75,9 +75,14 @@ typedef struct ossd_font_s
   use ossd_init(OSSD_UPDOWN) to rotate screen
   */
 #define OSSD_UPDOWN 0x09
+#define OSSD_NORMAL 0x00
 
-/** set default parameters */
-void ossd_init(uint8_t orientation);
+/**
+  set default parameters
+  for AVR i2c_val is I2C address
+  for Linux (Edison, RPi) i2c_val is I2C bus
+  */
+void ossd_init(uint8_t i2c_val, uint8_t orientation);
 
 /** fill screen with specified pattern */
 void ossd_fill_screen(uint8_t data);

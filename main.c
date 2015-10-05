@@ -1,5 +1,5 @@
 /*  BSD License
-    Copyright (c) 2014 Andrey Chilikin https://github.com/achilikin
+    Copyright (c) 2015 Andrey Chilikin https://github.com/achilikin
 
     Redistribution and use in source and binary forms, with or without
     modification, are permitted provided that the following conditions are met:
@@ -35,7 +35,7 @@
 #include <unistd.h>
 
 #include "bdf.h"
-#include "pi2c.h"
+#include "li2c.h"
 #include "rterm.h"
 #include "ossd_i2c.h"
 
@@ -66,8 +66,9 @@ static void usage(const char *name)
 	printf("  native:     do not adjust font height 8 pixels\n");
 	printf("  ascender H: add extra ascender of H pixels per glyph\n");
 	printf("  rotate:     rotate glyphs' bitmaps CCW\n");
-	printf("  display A:  show converted font on SSD1306 compatible display\n");
-	printf("              using I2C bus 1, hexadecimal address A (default 3C)\n");
+	printf("  display     show converted font on SSD1306 compatible display\n");
+	printf("  i2c_bus B:  I2C bus for SSD1306 compatible display (default 1)\n");
+	printf("  i2c_addr A: I2C address for SSD1306 compatible display (default 0x3C)\n");
 	printf("  updown:     display orientation is upside down\n");
 }
 
@@ -75,7 +76,8 @@ int main(int argc, char **argv)
 {
 	char *file;
 	bdfe_t *font;
-	int flags = 0;
+  	int flags = 0;
+	uint8_t i2c_bus = 1;
 	uint8_t i2c_address = 0x3C;
 	uint8_t orientation = 0;
 	uint32_t gidx = 0;
@@ -134,15 +136,22 @@ int main(int argc, char **argv)
 		if (arg_is(argv[i], "-r", "rotate"))
 			flags |= BDF_ROTATE;
 
-		if (arg_is(argv[i], "-d", "display")) {
-			flags |= DISPLAY_FONT;
-			if (i < argc && isxdigit(*argv[i+1])) {
-				i++;
-				uint32_t i2ca = strtoul(argv[i], NULL, 16);
-				if (i2ca && (i2ca < 0x78))
-					i2c_address = i2ca;
-			}
+		if (arg_is(argv[i], "-B", "i2c_bus")) {
+			i++;
+			uint32_t i2bus = strtoul(argv[i], NULL, 16);
+			if (i2bus && (i2bus < LI2C_MAX_BUS))
+				i2c_bus = i2bus;
 		}
+
+		if (arg_is(argv[i], "-A", "i2c_addr")) {
+			i++;
+			uint32_t i2ca = strtoul(argv[i], NULL, 16);
+			if (i2ca && (i2ca < 0x78))
+				i2c_address = i2ca;
+		}
+
+		if (arg_is(argv[i], "-d", "display"))
+			flags |= DISPLAY_FONT;
 
 		if (arg_is(argv[i], "-u", "updown"))
 			orientation = OSSD_UPDOWN;
@@ -161,12 +170,21 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if (pi2c_open(PI2C_BUS) < 0) {
-		fprintf(stderr, "Unable to open i2c bus %d\n", PI2C_BUS);
+	if (i2c_bus > PI2C_MAX_BUS)
+		li2c_init(LI2C_EDISON);
+	else
+		li2c_init(LI2C_RPI);
+
+	if (li2c_open(i2c_bus) < 0) {
+		fprintf(stderr, "Unable to open i2c bus %d\n", i2c_bus);
 		free(font);
 		return -1;
 	}
-	pi2c_select(PI2C_BUS, i2c_address);
+	if (li2c_select(i2c_bus, i2c_address) < 0) {
+		fprintf(stderr, "Unable to open select device at %02X\n", i2c_address);
+		free(font);
+		return -1;
+	}
 
 	ossd_font_t of;
 	of.gw   = font->gw;
@@ -175,7 +193,7 @@ int main(int argc, char **argv)
 	of.gn   = (uint8_t)font->chars;
 	of.font = font->font;
 
-	ossd_init(orientation);
+	ossd_init(i2c_bus, orientation);
 	ossd_set_user_font(&of, NULL);
 	ossd_select_font(OSSD_FONT_USER);
 
@@ -210,7 +228,7 @@ int main(int argc, char **argv)
 
 exit:
 	stdin_mode(TERM_MODE_CAN);
-	pi2c_close(PI2C_BUS);
+	li2c_close(i2c_bus);
 	free(font);
 
 	return 0;

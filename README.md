@@ -7,7 +7,7 @@ Why? I've decided to add a small oled display to my temperature/humidity station
 
 So here it is - bdf font converter which can export glyphs from bdf and present them as array of bytes. It also can rotate 8x8 and 8x16 glyphs CCW so they can be used on displays with SSD1306 controller.
 
-I'm running it with my Raspberry Pi (same RPi I use to program MMR70 ATmega) but it should run on any other Linux machine as well.
+I'm running it with on Raspberry Pi (same RPi I use to program MMR70 ATmega) but latest version can run Intel Edison with native Linux I2C interface or Arduino-like Wire. With the native Linux I2C interface it should run on any other Linux machine as well.
 
 
 Command line options
@@ -26,8 +26,9 @@ bdfe [options] <bdf file>
   native:     do not adjust font height 8 pixels
   ascender H: add extra ascender of H pixels per glyph
   rotate:     rotate glyphs' bitmaps CCW
-  display A:  show converted font on SSD1306 compatible display
-              using I2C bus 1, hexadecimal address A (default 3C)
+  display     show converted font on SSD1306 compatible display
+  i2c_bus B:  I2C bus for SSD1306 compatible display (default 1)
+  i2c_addr A: I2C address for SSD1306 compatible display (default 0x3C)
   updown:     display orientation is upside down
 ```
 
@@ -35,7 +36,7 @@ So ```bdfe header verbose line all native file.bdf``` and ```bdfe -h -v -l -a -n
 
 There is no output file option - just redirect bdfe output to a file: ```bdfe -h -v -l -a -n font.bdf > font.h```
  
-OLED display is not needed for conversion but useful to have as you can immediately see if font is suitable with under-/over-line or inverse attributes. By default I2C slave address x3C is used, on my display this address is selected by connecting DC to GND, connecting it to Vcc switches address to x3D. If you do not know address of your SSD1306 display use ```i2cdetect  
+OLED display is not needed for conversion but useful to have as you can immediately see if font is suitable with under-/over-line or inverse attributes. By default I2C slave address x3C is used, on my display this address is selected by connecting DC to GND, connecting it to Vcc switches address to x3D. If you do not know address of your SSD1306 display use ```i2cdetect```  
 
 Source code
 -----------
@@ -45,7 +46,8 @@ Source code can be split to standalone modules which might be used in other proj
 ```bdfe.h, bdfe.c``` - BDF file parser, single (quite big) function.
 ```rterm.h, rterm.c``` - raw terminal input, kind of old nice getch().
 ```ossd_i2c.h, ossd_i2c.c``` - OLED SSD1306 controller interface using I2C bus. Simple text mode only with direct access to SSD1306 registers, no shadow graphics buffer - memory on MMR70 ATmega32 MCU is a precious resource and anyway MMR70 will update screen only once in a while. Currently only fonts 8 and 16 bits high are supported. Underline, overline and inverse attributes can be used. 
-```pi2c.h, pi2c.c``` - basic I2C wrapper for i2c-dev library, allows to write to SSD1306 connected to I2C bus.
+```li2c.h, li2c.c``` - basic I2C wrapper for Linux i2c-dev library, provides communication with SSD1306 connected to I2C bus.
+```wi2c.h, wi2c.c``` - basic I2C wrapper for Arduino Wire object, not used in this project.
 ```font8x8.h, font8x16.h``` - converted bdf files.
 ```main.c``` - puts all of above together and does the work.
 

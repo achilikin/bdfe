@@ -5,8 +5,8 @@ CFLAGS += -g
 LIBS    =
 
 CORE = bdfe
-OBJS = main.o ossd_i2c.o pi2c.o bdf.o rterm.o
-HFILES = Makefile pi2c.h ossd_i2c.h rterm.h font88.h font816.h
+OBJS = main.o ossd_i2c.o bdf.o rterm.o li2c.o
+HFILES = Makefile li2c.h ossd_i2c.h rterm.h font88.h font816.h
 CFILES = ossd_i2c.c bdf.c rterm.c main.c 
 
 all: $(CORE)
@@ -19,6 +19,6 @@ clean:
 	rm -f *.o
 
 %.o: %.c $(HFILES)
-	$(CXX) -c $(CFLAGS) $< -o $@
+	$(CXX) -c $(CFLAGS) -DOSSD_TARGET=OSSD_IF_LINUX $< -o $@
 
 
