@@ -55,6 +55,7 @@ Source code can be split to standalone modules which might be used in other proj
 Examples
 --------
 ![bdfe screen](http://achilikin.com/github/bdfe-01.png)
+
 Converting 7x8 font... Use ```bdfe ... | less``` to scroll exported font up and down.
 
 ![8x8 screen](http://achilikin.com/github/font8x8.gif) ![8x16 screen](http://achilikin.com/github/font8x16.gif) ![mmr70 screen](http://achilikin.com/github/mmr70.png)
