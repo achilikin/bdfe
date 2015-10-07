@@ -16,7 +16,7 @@
     IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 	ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
 	BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
 	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
@@ -27,8 +27,9 @@
 #define __OLED_SSD1306_I2C__
 
 /**
-	Limited set of functions for SSD1306 compatible OLED displays in text mode
-	to minimize memory footprint if used on Atmel AVRs with low memory.
+  Limited set of functions for SSD1306 / SH1106 compatible OLED 128x64 displays
+  in text mode to minimize memory footprint if used on Atmel AVRs chips
+  with low memory.
 */
 
 #ifdef __cplusplus
@@ -70,7 +71,13 @@ typedef struct ossd_font_s
 	const uint8_t *font;
 } ossd_font_t;
 
-/** 
+/**
+  Most common OLED drivers SSD1306 and SH1106 are supported
+  */
+#define OSSD_SH1106  0
+#define OSSD_SSD1306 1
+
+/**
   flat cable connected at the top
   use ossd_init(OSSD_UPDOWN) to rotate screen
   */
@@ -79,10 +86,11 @@ typedef struct ossd_font_s
 
 /**
   set default parameters
-  for AVR i2c_val is I2C address
-  for Linux (Edison, RPi) i2c_val is I2C bus
+  driver: OSSD_SSD1306 or OSSD_SH1106
+  i2c_val: I2C address for AVR
+           I2C bus for Linux (Edison, RPi)
   */
-void ossd_init(uint8_t i2c_val, uint8_t orientation);
+void ossd_init(uint8_t driver, uint8_t i2c_val, uint8_t orientation);
 
 /** fill screen with specified pattern */
 void ossd_fill_screen(uint8_t data);
@@ -96,7 +104,7 @@ void ossd_set_contrast(uint8_t val);
 /** select one of three fonts for following ossd_putlx() calls */
 uint8_t ossd_select_font(uint8_t font);
 
-/** 
+/**
  set user font selectable by OSSD_FONT_USER to nfont
  store current user font in ofont (if not NULL)
  */

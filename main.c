@@ -16,7 +16,7 @@
     IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 	ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
 	BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
 	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
@@ -43,7 +43,7 @@
 
 /**
  sarg: short argument
- larg: long argument 
+ larg: long argument
  */
 static int arg_is(const char *arg, const char *sarg, const char *larg)
 {
@@ -77,6 +77,7 @@ int main(int argc, char **argv)
 	char *file;
 	bdfe_t *font;
   	int flags = 0;
+	uint8_t driver = OSSD_SSD1306;
 	uint8_t i2c_bus = 1;
 	uint8_t i2c_address = 0x3C;
 	uint8_t orientation = 0;
@@ -136,6 +137,12 @@ int main(int argc, char **argv)
 		if (arg_is(argv[i], "-r", "rotate"))
 			flags |= BDF_ROTATE;
 
+		if (arg_is(argv[i], "-3", "ssd1306"))
+			driver = OSSD_SSD1306;
+
+		if (arg_is(argv[i], "-1", "sh1106"))
+			driver = OSSD_SH1106;
+
 		if (arg_is(argv[i], "-B", "i2c_bus")) {
 			i++;
 			uint32_t i2bus = strtoul(argv[i], NULL, 16);
@@ -193,7 +200,7 @@ int main(int argc, char **argv)
 	of.gn   = (uint8_t)font->chars;
 	of.font = font->font;
 
-	ossd_init(i2c_bus, orientation);
+	ossd_init(driver, i2c_bus, orientation);
 	ossd_set_user_font(&of, NULL);
 	ossd_select_font(OSSD_FONT_USER);
 
