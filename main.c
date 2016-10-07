@@ -30,6 +30,7 @@
 */
 #include <ctype.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -40,6 +41,8 @@
 #include "ossd_i2c.h"
 
 #define DISPLAY_FONT 0x80000000
+
+const char *filename(const char *name);
 
 /**
  sarg: short argument
@@ -86,13 +89,13 @@ int main(int argc, char **argv)
 	unsigned gmin = 32, gmax = 126;
 
 	if (argc < 2) {
-		usage(basename(argv[0]));
+		usage(filename(argv[0]));
 		return -1;
 	}
 
 	for(int i = 1; i < argc; i++) {
 		if (arg_is(argv[i], "-?", "help")) {
-			usage(basename(argv[0]));
+			usage(filename(argv[0]));
 			return 0;
 		}
 

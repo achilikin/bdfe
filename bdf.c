@@ -36,6 +36,8 @@
 
 #include "bdf.h"
 
+const char *filename(const char *name);
+
 // check if 'buf' starts with 'key' and store pointer to the argument
 static char *key_arg(char *buf, const char *key, char **arg)
 {
@@ -99,7 +101,7 @@ bdfe_t *bdf_convert(const char *name, unsigned gmin, unsigned gmax, unsigned asc
 			printf(" -r");
 		if (ascender)
 			printf(" -a %d", ascender);
-		printf(" -s %d-%d %s'\n", gmin, gmax, basename(name));
+		printf(" -s %d-%d %s'\n", gmin, gmax, filename(name));
 	}
 
 	// parse file header up to 'CHARS' keyword
@@ -197,7 +199,7 @@ bdfe_t *bdf_convert(const char *name, unsigned gmin, unsigned gmax, unsigned asc
 
 	while(fgets(buf, sizeof(buf) - 2, fp) != NULL) {
 		if (key_arg(buf, "STARTCHAR", &arg)) {
-			unsigned displacement = 0;
+			int displacement = 0;
 			unsigned bitmap = 0, i = 0, idx = 0;
 			unsigned bbw = 0;
 			int bbox = 0, bboy = 0;
