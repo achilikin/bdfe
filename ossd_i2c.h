@@ -23,6 +23,8 @@
 	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 	POSSIBILITY OF SUCH DAMAGE.
 */
+#ifndef DISABLE_I2C
+
 #ifndef __OLED_SSD1306_I2C__
 #define __OLED_SSD1306_I2C__
 
@@ -131,6 +133,8 @@ static inline void ossd_cls(void) {
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

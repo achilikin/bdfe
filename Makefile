@@ -1,4 +1,4 @@
-CXX = g++
+CXX = gcc
 CFLAGS = -Wall -Werror
 CFLAGS += -g
 #CFLAGS += -O3
@@ -7,7 +7,7 @@ LIBS    =
 CORE = bdfe
 OBJS = main.o fname.o ossd_i2c.o bdf.o rterm.o li2c.o
 HFILES = Makefile li2c.h ossd_i2c.h rterm.h font88.h font816.h
-CFILES = ossd_i2c.c bdf.c rterm.c fname.c main.c 
+CFILES = ossd_i2c.c bdf.c rterm.c fname.c main.c
 
 all: $(CORE)
 

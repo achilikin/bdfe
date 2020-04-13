@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include "bdf.h"
 #include "li2c.h"
@@ -70,8 +71,10 @@ static void usage(const char *name)
 	printf("  ascender H: add extra ascender of H pixels per glyph\n");
 	printf("  rotate:     rotate glyphs' bitmaps CCW\n");
 	printf("  display     show converted font on SSD1306 compatible display\n");
+	#ifndef DISABLE_I2C
 	printf("  i2c_bus B:  I2C bus for SSD1306 compatible display (default 1)\n");
 	printf("  i2c_addr A: I2C address for SSD1306 compatible display (default 0x3C)\n");
+	#endif
 	printf("  updown:     display orientation is upside down\n");
 }
 
@@ -80,9 +83,11 @@ int main(int argc, char **argv)
 	char *file;
 	bdfe_t *font;
   	int flags = 0;
+	#ifndef DISABLE_I2C
 	uint8_t driver = OSSD_SSD1306;
 	uint8_t i2c_bus = 1;
 	uint8_t i2c_address = 0x3C;
+	#endif
 	uint8_t orientation = 0;
 	uint32_t gidx = 0;
 	unsigned ascender = 0;
@@ -140,6 +145,7 @@ int main(int argc, char **argv)
 		if (arg_is(argv[i], "-r", "rotate"))
 			flags |= BDF_ROTATE;
 
+		#ifndef DISABLE_I2C
 		if (arg_is(argv[i], "-3", "ssd1306"))
 			driver = OSSD_SSD1306;
 
@@ -165,6 +171,7 @@ int main(int argc, char **argv)
 
 		if (arg_is(argv[i], "-u", "updown"))
 			orientation = OSSD_UPDOWN;
+		#endif
 	}
 
 	file = argv[argc - 1];
@@ -180,6 +187,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	#ifndef DISABLE_I2C
 	if (i2c_bus > PI2C_MAX_BUS)
 		li2c_init(LI2C_EDISON);
 	else
@@ -235,10 +243,13 @@ int main(int argc, char **argv)
 			}
 		}
 	} while(gidx < font->chars);
+	#endif
 
 exit:
 	stdin_mode(TERM_MODE_CAN);
+	#ifndef DISABLE_I2C
 	li2c_close(i2c_bus);
+	#endif
 	free(font);
 
 	return 0;
