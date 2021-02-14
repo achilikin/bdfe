@@ -30,6 +30,8 @@
 	with low memory.
 */
 
+#ifndef DISABLE_I2C
+
 #include <stdio.h>
 
 #include "ossd_i2c.h"
@@ -397,3 +399,5 @@ void ossd_init(uint8_t driver, uint8_t i2c_val, uint8_t orientation)
 	ossd_cmd(OSSD_SET_SLEEP_OFF);
 	ossd_goto(0, 0);
 }
+
+#endif

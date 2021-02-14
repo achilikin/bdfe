@@ -52,6 +52,8 @@ Source code can be split to standalone modules which might be used in other proj
 ```font8x8.h, font8x16.h``` - converted bdf files.
 ```main.c``` - puts all of above together and does the work.
 
+If you need to generate header files on the host system with no I2C use ```make CFLAGS=-DDISABLE_I2C```.
+
 Examples
 --------
 ![bdfe screen](http://achilikin.com/github/bdfe-01.png)

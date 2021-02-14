@@ -16,7 +16,7 @@
     IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 	ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
 	BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
 	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
@@ -27,7 +27,7 @@
 /**
 	Basic Linux I2C wrapper for Raspberry Pi and Intel Edison,
 	only write is supported
-	
+
 	For Raspberry Pi make sure that RPi i2c driver is enabled, check following
 	files:
 	/etc/modprobe.d/raspi-blacklist.conf
@@ -37,6 +37,8 @@
 	/etc/modprobe.d/i2c.conf
 	options i2c_bcm2708 baudrate=400000
 */
+
+#ifndef DISABLE_I2C
 
 #ifndef __LI2C_H__
 #define __LI2C_H__
@@ -67,6 +69,8 @@ int li2c_write(uint8_t bus, const uint8_t *data, uint32_t len);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif
